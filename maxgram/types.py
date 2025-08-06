@@ -46,11 +46,16 @@ class MessageAttachment(BaseModel):
     payload: Dict[str, Any] = Field(..., description="Данные вложения")
 
 
+class MarkupElement(BaseModel):
+    ...
+
+
 class MessageBody(BaseModel):
-    text: str = Field(..., description="Текст сообщения")
-    mid: Optional[str] = Field(None)
-    seq: Optional[int] = Field(None)
+    text: Optional[str] = Field(None, description="Текст сообщения")
+    mid: str = Field(..., description="Уникальный ID сообщения")
+    seq: int = Field(..., description="ID последовательности сообщения в чате")
     attachments: Optional[List[MessageAttachment]] = Field(None, description="Вложения сообщения")
+    markup: Optional[List[MarkupElement]] = Field(None, description="Разметка текста сообщения. https://dev.max.ru/docs-api#Форматирование%20текста")
 
 
 class MessageRecipient(BaseModel):
@@ -60,7 +65,10 @@ class MessageRecipient(BaseModel):
 
 
 class LinkedMessage(BaseModel):
-    ...
+    type: str = Field(..., description="reply|forward")
+    message: 'Message' = Field(..., description="Сообщение")
+    sender: 'User' = Field(..., description="Отправитель сообщения")
+    chat_id: int = Field(..., description="Идентификатор чата")
 
 
 class MessageStat(BaseModel):
@@ -79,11 +87,23 @@ class Message(BaseModel):
     url: Optional[str] = Field(None, description="Публичная ссылка на сообщение. Может быть null для диалогов или не публичных чатов")
 
 
+class NewMessageBody(BaseModel):
+    """https://dev.max.ru/docs-api/objects/NewMessageBody"""
+    text: Optional[str] = Field(None, description="до 4000 символов. Новый текст сообщения")
+    attachments: Optional[List[MessageAttachment]] = Field(None, description="Вложения сообщения")
+    link: Optional[LinkedMessage] = Field(None, description="Ссылка на сообщение")
+    format: Optional[str] = Field(None, description="Формат текста сообщения. Возможные значения: html, markdown")
+    notify: Optional[bool] = Field(None, description="Оповещение о новом сообщении. По умолчанию true")
+
+
 class Update(BaseModel):
     """https://dev.max.ru/docs-api/objects/Update"""
     update_type: str = Field(..., description="Тип обновления")
     timestamp: int = Field(..., description="Время обновления")
-    message: Message = Field(..., description="Сообщение, связанное с обновлением")
+    message: Optional[Message] = Field(None, description="Сообщение, связанное с обновлением")
     user_locale: Optional[str] = Field(None, description="Языковая локаль. Например: ru-RU")
     callback_id: Optional[str] = Field(None, description="Идентификатор обратного вызова")
     payload: Optional[str] = Field(None, description="Полезные данные для обработки")
+    chat_id: Optional[int] = Field(None, description="Идентификатор чата")
+    user: Optional[User] = Field(None, description="Пользователь, который отправил сообщение")
+    user_id: Optional[int] = Field(None, description="Идентификатор пользователя")
